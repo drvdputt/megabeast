@@ -24,7 +24,6 @@ def setup_spatial_regions(cat,
     -------
     wcs_info: astropy WCS object
     """
-
     # min/max ra
     min_ra = cat['RA'].min()
     max_ra = cat['RA'].max()
@@ -33,22 +32,28 @@ def setup_spatial_regions(cat,
 
     # ra/dec delta values
     dec_delt = pix_size/3600.
-    ra_delt = dec_delt
+    ra_delt_physical = dec_delt
+    ra_delt = ra_delt_physical / math.cos(math.radians(0.5 * (max_dec + min_dec)))
 
     # compute the number of pixels and
     n_y = int(np.rint((max_dec - min_dec)/dec_delt) + 1)
-    n_x = int(np.rint(math.cos(0.5*(max_dec+min_dec)*math.pi/180.)
-                      * (max_ra-min_ra)/ra_delt) + 1)
+    n_x = int(np.rint((max_ra-min_ra)/ra_delt) + 1)
+
+    grid_max_dec = min_dec + n_y * dec_delt
+    grid_max_ra = min_ra + n_x * ra_delt
+
+    center_ra = (min_ra + grid_max_ra) / 2
+    center_dec = (min_dec + grid_max_dec) / 2
 
     # ra delta should be negative
-    ra_delt *= -1.
+    # ra_delt_physical *= -1.
 
     print('# of x & y pixels = ', n_x, n_y)
 
     w = wcs.WCS(naxis=2)
     w.wcs.crpix = np.asarray([n_x, n_y], dtype=float) / 2.
-    w.wcs.cdelt = [ra_delt, dec_delt]
-    w.wcs.crval = np.asarray([(min_ra+max_ra), (min_dec+max_dec)]) / 2.
+    w.wcs.cdelt = [-ra_delt_physical, dec_delt]
+    w.wcs.crval = [center_ra, center_dec]
     w.wcs.ctype = ["RA---TAN", "DEC--TAN"]
 
     return (w, n_x, n_y)
