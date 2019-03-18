@@ -38,22 +38,24 @@ def setup_spatial_regions(cat,
     # compute the number of pixels and
     n_y = int(np.rint((max_dec - min_dec)/dec_delt) + 1)
     n_x = int(np.rint((max_ra-min_ra)/ra_delt) + 1)
-
-    grid_max_dec = min_dec + n_y * dec_delt
-    grid_max_ra = min_ra + n_x * ra_delt
-
-    center_ra = (min_ra + grid_max_ra) / 2
-    center_dec = (min_dec + grid_max_dec) / 2
-
-    # ra delta should be negative
-    # ra_delt_physical *= -1.
-
     print('# of x & y pixels = ', n_x, n_y)
+
+    # The grid should be slightly wider than the data range
+    if (n_x * ra_delt < max_ra - min_ra):
+        raise 'grid does not cover RA range!'
+    if (n_y * dec_delt < max_dec - min_dec):
+        raise 'grid does not cover DEC range!'
+
+    # use the data center as the grid center. Since the grid is slightly
+    # larger than the data, the bins at the edges will have somewhat
+    # less sources
+    data_center_dec = (min_dec + max_dec) / 2
+    data_center_ra = (min_ra + max_ra) / 2
 
     w = wcs.WCS(naxis=2)
     w.wcs.crpix = np.asarray([n_x, n_y], dtype=float) / 2.
     w.wcs.cdelt = [-ra_delt_physical, dec_delt]
-    w.wcs.crval = [center_ra, center_dec]
+    w.wcs.crval = [data_center_ra, data_center_dec]
     w.wcs.ctype = ["RA---TAN", "DEC--TAN"]
 
     return (w, n_x, n_y)
