@@ -91,11 +91,11 @@ def regions_for_objects(ra,
     world[:, 1] = dec
 
     # convert
-    pixcrd = wcs_info.wcs_world2pix(world, 1)
+    pixcrd = wcs_info.wcs_world2pix(world, 0)
 
     # get the arrays to return
-    x = pixcrd[:, 0].astype(int)
-    y = pixcrd[:, 1].astype(int)
+    x = np.rint(pixcrd[:, 0]).astype(int)
+    y = np.rint(pixcrd[:, 1]).astype(int)
     xy_name = [None]*len(ra)
 
     for k in range(len(x)):
